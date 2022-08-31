@@ -4910,7 +4910,7 @@ Into field *sql after*
 
 [source,bash]
 ---------------
-UPDATE llx_user set pass_crypted = '__APPPASSWORD0__', email = '__APPEMAIL__' where login = 'admin' AND (pass = 'admin' OR pass_crypted = 'value_of_hashed_password_encrypted_with_password_hash');
+UPDATE llx_user set pass_crypted = '__APPPASSWORD__', email = '__APPEMAIL__' where login = 'admin' AND (pass = 'admin' OR pass_crypted = 'value_of_hashed_password_encrypted_with_password_hash');
 REPLACE INTO llx_const (name, entity, value, type, visible) values('CRON_KEY', 0, '__OSUSERNAME__', 'chaine', 0);
 REPLACE INTO llx_const (name, entity, value, type, visible) values('MAIN_INFO_SOCIETE_NOM', 1, '__APPORGNAME__', 'chaine', 0);
 --REPLACE INTO llx_const (name, entity, value, type, visible) values('MAIN_INFO_SOCIETE_COUNTRY', 1, '__APPCOUNTRYIDCODELABEL__', 'chaine', 0);
