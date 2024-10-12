@@ -19,13 +19,13 @@ echo "CERTBOT_VALIDATION=$CERTBOT_VALIDATION"
 echo "CERTBOT_REMAINING_CHALLENGES=$CERTBOT_REMAINING_CHALLENGES"
 
 # Sanitize input data
-CERTBOT_DOMAIN=$(echo $CERTBOT_DOMAIN |  tr -cd '[:alnum:][_\-][\.]')
-CERTBOT_VALIDATION=$(echo $CERTBOT_VALIDATION |  tr -cd '[:alnum:][_\-]')
-CERTBOT_REMAINING_CHALLENGES=$(echo $CERTBOT_REMAINING_CHALLENGES |  tr -cd '[:alnum:][_\-]')
+CERTBOT_DOMAIN=$(echo $CERTBOT_DOMAIN | tr -cd '[:alnum:][_\-][\.]')
+CERTBOT_VALIDATION=$(echo $CERTBOT_VALIDATION | tr -cd '[:alnum:][_\-]')
+CERTBOT_REMAINING_CHALLENGES=$(echo $CERTBOT_REMAINING_CHALLENGES | tr -cd '[:alnum:][_\-]')
 
 export subdomain=$CERTBOT_DOMAIN
 if [[ "x$subdomain" == "x" ]]; then
-	export subdomain=`grep '^subdomain=' /etc/sellyoursaas.conf | cut -d '=' -f 2`
+        export subdomain=`grep '^subdomain=' /etc/sellyoursaas.conf | cut -d '=' -f 2`
 fi
 # Sanitize variable
 subdomain=${subdomain//[^a-zA-Z0-9.-]/}
@@ -33,46 +33,32 @@ subdomain=${subdomain//[^a-zA-Z0-9.-]/}
 zone_file="/etc/bind/${subdomain}.hosts"
 echo "zone_file=$zone_file"
 
-
-#current_certificates="/etc/letsencrypt/live/withX.mydomain.com/*pem"
-
-if [ -z "$CERTBOT_DOMAIN" ] || [ -z "$CERTBOT_VALIDATION" ]
-then
-	echo "EMPTY DOMAIN OR VALIDATION : LET'S ENCRYPT ENV VARIABLES NOT SET"
-	exit 2
+if [ -z "$CERTBOT_DOMAIN" ] || [ -z "$CERTBOT_VALIDATION" ]; then
+    echo "EMPTY DOMAIN OR VALIDATION : LET'S ENCRYPT ENV VARIABLES NOT SET"
+    exit 2
 fi
 
-if [ ! -f "$zone_file" ] || [ ! -w "$zone_file" ]
-then
-	echo "ZONE FILE DOESN'T EXIST OR ISN'T WRITABLE: $zone_file"
-	exit 3
+if [ ! -f "$zone_file" ] || [ ! -w "$zone_file" ]; then
+    echo "ZONE FILE DOESN'T EXIST OR ISN'T WRITABLE: $zone_file"
+    exit 3
 fi
 
-
-#current_checksums=$(md5sum $current_certificates)
-#$verbose && echo -e "current certificates md5sums :\n$current_checksums"
-
+# Get the current serial
 old_serial=$(grep serial $zone_file | awk '{print $1}' | tr -cd '[:alnum:][_\-]')
 new_serial=$((old_serial+1))
-old_challenge=$(grep _acme-challenge $zone_file | awk '{print $4}' | head -n 1 | tr -cd '[:alnum:][_\-]')
-new_challenge="$CERTBOT_VALIDATION"
+
+# Log the current and new challenges
 $verbose && echo "old serial : $old_serial"
 $verbose && echo "new serial : $new_serial"
-$verbose && echo "old challenge : $old_challenge"
-$verbose && echo "new challenge : $new_challenge"
 
-if [ "x$CERTBOT_REMAINING_CHALLENGES" == "x1" ]
-then
-	cp -f $zone_file $zone_file.auto.bck3
-	awk '{ if ($0 ~ /^_acme-challenge\s+IN\s+TXT/) { if ($0 ~ /'$old_challenge'/) { print; print "_acme-challenge IN TXT \"'$CERTBOT_VALIDATION'\""; next} else {next} } {print} }' $zone_file.auto.bck3 > $zone_file;
-	sed -i.auto.bck4 -e "s/$old_serial/$new_serial/" $zone_file
+# Append the new TXT record without removing the previous one
+echo "_acme-challenge.${CERTBOT_DOMAIN}. IN TXT \"${CERTBOT_VALIDATION}\"" >> $zone_file
 
-	systemctl restart bind9
-	sleep 10
-else
-	sed -i.auto.bck -e "s/$old_challenge/$new_challenge/" $zone_file
-	sed -i.auto.bck2 -e "s/$old_serial/$new_serial/" $zone_file
+# Update the serial number
+sed -i.auto.bck -e "s/$old_serial/$new_serial/" $zone_file
 
-	systemctl restart bind9
-	sleep 15
-fi
+# Restart BIND to apply changes
+systemctl restart bind9
+
+# Sleep to allow propagation (adjust this time if necessary)
+sleep 15
