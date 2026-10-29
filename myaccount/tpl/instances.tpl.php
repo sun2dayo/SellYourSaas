@@ -1740,6 +1740,14 @@ if ($action == "confirmundeploy") {
 	</style>';
 }
 
+	// Hook to allow external modules to show other services of the customer (domains, hosting...) after the list of instances
+	$hookmanager->initHooks(array('sellyoursaas-myaccountinstances'));
+	$parameters = array('mythirdpartyaccount' => $mythirdpartyaccount, 'listofcontractid' => $listofcontractid);
+	$reshook = $hookmanager->executeHooks('printMoreInstancesContent', $parameters, $mythirdpartyaccount, $action);
+	if ($reshook >= 0) {
+		print $hookmanager->resPrint;
+	}
+
 	// Section to add/create a new instance
 	print '
     	<!-- Add a new instance -->

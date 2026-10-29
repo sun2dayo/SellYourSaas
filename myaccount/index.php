@@ -310,7 +310,17 @@ $sql .= ' '.MAIN_DB_PREFIX.'societe as s';
 $sql .= ' WHERE c.fk_soc = s.rowid AND s.rowid = '.((int) $mythirdpartyaccount->id);
 //$sql .= ' AND d.fk_contrat = c.rowid';
 $sql .= ' AND c.entity = '.((int) $conf->entity);
-$sql .= " AND ce.deployment_status IN ('processing', 'done', 'undeployed')";
+// Optional extra deployment status (comma separated list, hidden constant) whose contracts are shown on the billing page only
+// (for example contracts of services not deployed by SellYourSaas, managed by another module, with their own recurring invoices)
+$extrastatusforbilling = '';
+if ($mode == 'billing' && getDolGlobalString('SELLYOURSAAS_EXTRA_DEPLOYMENT_STATUS_FOR_BILLING')) {
+	foreach (explode(',', getDolGlobalString('SELLYOURSAAS_EXTRA_DEPLOYMENT_STATUS_FOR_BILLING')) as $tmpstatus) {
+		if (trim($tmpstatus) !== '') {
+			$extrastatusforbilling .= ", '".$db->escape(trim($tmpstatus))."'";
+		}
+	}
+}
+$sql .= " AND ce.deployment_status IN ('processing', 'done', 'undeployed'".$extrastatusforbilling.")";
 $resql=$db->query($sql);
 if ($resql) {
 	$num_rows = $db->num_rows($resql);
