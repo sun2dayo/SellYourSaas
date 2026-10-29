@@ -346,7 +346,7 @@ div.block {
 background-color: #fff;
 }
 div.block header {
-background-color: #334;
+background-color: #217346;
 color: #eee;padding: 10px;margin-bottom: 20px;
 text-align: center;
 }
