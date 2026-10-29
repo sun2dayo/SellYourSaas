@@ -354,6 +354,15 @@ if [[ "$mode" == "deployall" ]]; then
 	if [[ -d $targetdir/$osusername ]]
 	then
 		echo "$targetdir/$osusername exists. good."
+		    # --- INICIO DO BLOCO DE CODIGO ADICIONADO ---
+                    # Configura o acesso SSH para o utilizador da instancia, para manutencao
+                 echo `date +'%Y-%m-%d %H:%M:%S'`" ***** Setup SSH key for instance user $osusername"
+                 mkdir -p $targetdir/$osusername/.ssh
+                 cat /home/admin/.ssh/id_rsa_sellyoursaas.pub >> $targetdir/$osusername/.ssh/authorized_keys
+                 chown -R $osusername:$osusername $targetdir/$osusername/.ssh
+                 chmod 700 $targetdir/$osusername/.ssh
+                 chmod 600 $targetdir/$osusername/.ssh/authorized_keys
+                    # --- FIM DO BLOCO DE CODIGO ADICIONADO ---
 	else
 		mkdir $targetdir/$osusername
 		chmod -R go-rwx $targetdir/$osusername
