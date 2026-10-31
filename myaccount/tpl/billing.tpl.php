@@ -336,10 +336,17 @@ if (count($listofcontractid) > 0) {
 
 print '
 
-	        </div> <!-- END PORTLET -->
+	        </div> <!-- END PORTLET -->';
 
+// Hook to allow external modules to show other payment options after the list of invoices
+$hookmanager->initHooks(array('sellyoursaas-myaccountbilling'));
+$parameters = array('mythirdpartyaccount' => $mythirdpartyaccount);
+$reshook = $hookmanager->executeHooks('printMoreBillingContent', $parameters, $mythirdpartyaccount, $action);
+if ($reshook >= 0) {
+	print $hookmanager->resPrint;
+}
 
-
+print '
 	      </div> <!-- END COL -->';
 if ($mythirdpartyaccount->array_options['options_checkboxnonprofitorga'] != 'nonprofit' || !getDolGlobalInt("SELLYOURSAAS_ENABLE_FREE_PAYMENT_MODE")) {
 	print'			<!-- Box of payment modes -->
