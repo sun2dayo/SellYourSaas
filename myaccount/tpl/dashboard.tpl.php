@@ -214,7 +214,17 @@ if (!empty($mythirdpartyaccount->context['isamoduleprovider'])) {
 
 print '
 
-     </div> <!-- END PORTLET id=planSection -->
+     </div> <!-- END PORTLET id=planSection -->';
+
+// Hook to allow external modules to show other services of the customer on the dashboard
+$hookmanager->initHooks(array('sellyoursaas-myaccountdashboard'));
+$parameters = array('mythirdpartyaccount' => $mythirdpartyaccount, 'nbofinstances' => $nbofinstancesdone + $nbofinstancessuspended);
+$reshook = $hookmanager->executeHooks('printMoreDashboardContent', $parameters, $mythirdpartyaccount, $action);
+if ($reshook >= 0) {
+	print $hookmanager->resPrint;
+}
+
+print '
 	 </div> <!-- END COL MY INSTANCES-->';
 
 
@@ -285,7 +295,7 @@ if ($mythirdpartyaccount->client > 0) {
 				//dol_sort_array($contract->linkedObjects['facture'], 'date');
 				$nbinvoicenotpayed = 0;
 				$amountdue = 0;
-	foreach ($listofcontractid as $id => $contract) {
+	foreach ($listofcontractid + (empty($listofcontractidextra) ? array() : $listofcontractidextra) as $id => $contract) {
 		$contract->fetchObjectLinked();
 		if (isset($contract->linkedObjects['facture']) && is_array($contract->linkedObjects['facture'])) {
 			$contract->linkedObjects['facture'] = dol_sort_array($contract->linkedObjects['facture'], 'ref');

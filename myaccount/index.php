@@ -341,6 +341,27 @@ if ($resql) {
 	dol_print_error($db);
 }
 
+// Contracts of the optional extra deployment status: only added to the amounts of the dashboard, never to the list of instances
+$listofcontractidextra = array();
+if ($mode == 'dashboard' && getDolGlobalString('SELLYOURSAAS_EXTRA_DEPLOYMENT_STATUS_FOR_BILLING')) {
+	$tmpstatuses = array();
+	foreach (explode(',', getDolGlobalString('SELLYOURSAAS_EXTRA_DEPLOYMENT_STATUS_FOR_BILLING')) as $tmpstatus) {
+		if (trim($tmpstatus) !== '') {
+			$tmpstatuses[] = "'".$db->escape(trim($tmpstatus))."'";
+		}
+	}
+	$sql = 'SELECT c.rowid as rowid FROM '.MAIN_DB_PREFIX.'contrat as c';
+	$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'contrat_extrafields as ce ON ce.fk_object = c.rowid';
+	$sql .= ' WHERE c.fk_soc = '.((int) $mythirdpartyaccount->id).' AND c.entity = '.((int) $conf->entity);
+	$sql .= ' AND ce.deployment_status IN ('.implode(',', $tmpstatuses).')';
+	$resql = $db->query($sql);
+	while ($resql && ($obj = $db->fetch_object($resql))) {
+		$contract = new Contrat($db);
+		$contract->fetch($obj->rowid);
+		$listofcontractidextra[$obj->rowid] = $contract;
+	}
+}
+
 // Define if the thirdparty is a reseller
 $mythirdpartyaccount->isareseller = 0;		// @deprecated Use $mythirdpartyaccount->context['isareseller']
 $mythirdpartyaccount->context['isareseller'] = 0;
